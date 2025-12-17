@@ -179,8 +179,8 @@ inline void ConvPerChannel(
 
   // Sum up the kernel
   memset(kernel_sum, 0, sizeof(kernel_sum));
-  for (int i = 0; i < kernels; i++) {
-    for (int j = 0; j < patch_size; j++) {
+  for (int j = 0; j < patch_size; j++) {
+    for (int i = 0; i < kernels; i++) {
       kernel_sum[i] += kernel_matrix[j][i];
     }
   }
@@ -191,9 +191,9 @@ inline void ConvPerChannel(
   }
 
   // Reconstruct the output
-  for (int out_channel = 0; out_channel < output_depth; out_channel++) {
-    for (int out_y = 0; out_y < output_height; out_y++) {
-      for (int out_x = 0; out_x < output_width; out_x++) {
+  for (int out_y = 0; out_y < output_height; out_y++) {
+    for (int out_x = 0; out_x < output_width; out_x++) {
+      for (int out_channel = 0; out_channel < output_depth; out_channel++) {
         int32_t result = result_matrix[out_y * output_width + out_x][out_channel];
         if (bias_data) {
           result += bias_data[out_channel];
