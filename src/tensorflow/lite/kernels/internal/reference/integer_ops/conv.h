@@ -21,7 +21,7 @@ limitations under the License.
 #include "tensorflow/lite/kernels/internal/portable_tensor_utils.h"
 #include "cfu.h"
 
-#define TILE_SIZE 128
+#define TILE_SIZE 256
 #define MAX_MATRIX_SIZE (TILE_SIZE * TILE_SIZE)
 
 namespace tflite {
@@ -160,7 +160,7 @@ inline void ConvPerChannel(
         }
 
         // Matrix Multiplication
-        cfu_op3(0, (m_size << 16) | (n_size << 8) | (k_size), 0);
+        cfu_op3(0, (m_size << 16) | (n_size), k_size);
 
         // Read matrix C
         idx = 0;

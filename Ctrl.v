@@ -6,21 +6,21 @@ module Ctrl #
     input         clk,
     input         rst_n,
     input         in_valid,
-    input  [ 7:0] K,
-    input  [ 7:0] M,
-    input  [ 7:0] N,
+    input  [15:0] K,
+    input  [15:0] M,
+    input  [15:0] N,
     input  [ 2:0] funct3,
     input  [ 6:0] funct7,
-    input  [11:0] write_A_B_index,
-    input  [11:0] read_A_B_index,
-    input  [11:0] read_C_index,
+    input  [15:0] write_A_B_index,
+    input  [15:0] read_A_B_index,
+    input  [15:0] read_C_index,
     output        busy,
     output        A_wr_en,
-    output reg [11:0] A_index,
+    output reg [15:0] A_index,
     output        B_wr_en,
-    output reg [11:0] B_index,
+    output reg [15:0] B_index,
     output        C_wr_en,
-    output [11:0] C_index,
+    output [15:0] C_index,
     output        rst_horiz,
     output        rst_vert,
     output        rst_psum,
@@ -41,9 +41,9 @@ module Ctrl #
     localparam RECV       = 3'b111;
 
     // Input register
-    reg [11:0] A_index_reg;
-    reg [11:0] B_index_reg;
-    reg [11:0] C_index_reg;
+    reg [15:0] A_index_reg;
+    reg [15:0] B_index_reg;
+    reg [15:0] C_index_reg;
 
     // Output register
     reg load_active_reg;
@@ -103,16 +103,16 @@ module Ctrl #
     end
 
     // Iteration index
-    wire [7:0] i_tile_index = i_tile_index_reg;
-    wire [7:0] M_tile_index = M_tile_index_reg;
-    wire [7:0] N_tile_index = N_tile_index_reg;
+    wire [15:0] i_tile_index = i_tile_index_reg;
+    wire [15:0] M_tile_index = M_tile_index_reg;
+    wire [15:0] N_tile_index = N_tile_index_reg;
 
     // Number of tiles and remainder
-    wire [7:0] M_tiles = (M + SIZE - 1) / SIZE;
-    wire [7:0] K_tiles = (K + SIZE - 1) / SIZE;
-    wire [7:0] N_tiles = (N + SIZE - 1) / SIZE;;
-    wire [7:0] M_rem   = M % SIZE;
-    wire [7:0] K_rem   = K % SIZE;
+    wire [15:0] M_tiles = (M + SIZE - 1) / SIZE;
+    wire [15:0] K_tiles = (K + SIZE - 1) / SIZE;
+    wire [15:0] N_tiles = (N + SIZE - 1) / SIZE;;
+    wire [15:0] M_rem   = M % SIZE;
+    wire [15:0] K_rem   = K % SIZE;
 
     // Finish computation
     reg i_tile_done;
@@ -328,22 +328,22 @@ module Ctrl #
     end
 
     // Update i_tile_index for each partial sum iteration
-    reg [7:0] i_tile_index_reg;
+    reg [15:0] i_tile_index_reg;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            i_tile_index_reg <= 8'b0;
+            i_tile_index_reg <= 16'b0;
             i_tile_done      <= 1;
         end else begin
             if (next_state == LOAD) begin
                 if (curr_state == IDLE) begin
-                    i_tile_index_reg <= 8'b0;
+                    i_tile_index_reg <= 16'b0;
                     i_tile_done      <= 0;
                 end else if (curr_state == MAC) begin
                     i_tile_index_reg <= i_tile_index_reg + 1;
                     i_tile_done      <= 0;
                 end
             end else if (next_state == IDLE) begin
-                i_tile_index_reg <= 8'b0;
+                i_tile_index_reg <= 16'b0;
                 i_tile_done      <= 1;
             end else begin
                 i_tile_index_reg <= i_tile_index_reg;
@@ -353,14 +353,14 @@ module Ctrl #
     end
 
     // Update A matrix index
-    wire [7:0] i_tile_index_next = (curr_state == MAC) ? i_tile_index + 1
-                                                       : i_tile_index + 0;
+    wire [15:0] i_tile_index_next = (curr_state == MAC) ? i_tile_index + 1
+                                                        : i_tile_index + 0;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             A_index_reg  <= 16'b0;
         end else begin
             if (next_state == LOAD) begin
-                if (K_rem == 8'b0) begin
+                if (K_rem == 16'b0) begin
                     A_index_reg <= K_tiles * SIZE * M_tile_index + (i_tile_index_next) * SIZE;
                 end else begin
                     A_index_reg <= K_tiles * SIZE * M_tile_index + (i_tile_index_next) * SIZE - (SIZE - K_rem) * M_tile_index;
@@ -379,7 +379,7 @@ module Ctrl #
             B_index_reg  <= 16'b0;
         end else begin
             if (next_state == LOAD) begin
-                if (K_rem == 8'b0) begin
+                if (K_rem == 16'b0) begin
                     B_index_reg <= K_tiles * SIZE * N_tile_index + (i_tile_index_next) * SIZE;
                 end else begin
                     B_index_reg <= K_tiles * SIZE * N_tile_index + (i_tile_index_next) * SIZE - (SIZE - K_rem) * N_tile_index;
@@ -400,7 +400,7 @@ module Ctrl #
         end else begin
             if (curr_state == MAC && next_state == MAC_OUTPUT) begin
                 C_wr_en_reg <= 1;
-                if (M_rem == 8'b0) begin
+                if (M_rem == 16'b0) begin
                     C_index_reg <= M_tiles * SIZE * N_tile_index + M_tile_index * SIZE;
                 end else begin
                     C_index_reg <= M_tiles * SIZE * N_tile_index + M_tile_index * SIZE - (SIZE - M_rem) * N_tile_index;
@@ -437,21 +437,21 @@ module Ctrl #
     end
 
     // Update C matrix tile index
-    reg [7:0] M_tile_index_reg, N_tile_index_reg;
+    reg [15:0] M_tile_index_reg, N_tile_index_reg;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            M_tile_index_reg <= 8'b0;
-            N_tile_index_reg <= 8'b0;
+            M_tile_index_reg <= 16'b0;
+            N_tile_index_reg <= 16'b0;
             all_tile_done    <= 1;
         end else if (in_valid && next_state == IDLE) begin
-            M_tile_index_reg <= 8'b0;
-            N_tile_index_reg <= 8'b0;
+            M_tile_index_reg <= 16'b0;
+            N_tile_index_reg <= 16'b0;
             all_tile_done    <= 0;
         end else begin
             if (next_state == IDLE) begin
                 if (curr_state == IDLE) begin
-                    M_tile_index_reg <= 8'b0;
-                    N_tile_index_reg <= 8'b0;
+                    M_tile_index_reg <= 16'b0;
+                    N_tile_index_reg <= 16'b0;
                     all_tile_done    <= 1;
                 end else begin
                     if (N_tile_index < N_tiles - 1) begin
@@ -460,7 +460,7 @@ module Ctrl #
                     end else begin
                         if (M_tile_index_reg != M_tiles - 1) begin
                             M_tile_index_reg <= M_tile_index_reg + 1;
-                            N_tile_index_reg <= 8'b0;
+                            N_tile_index_reg <= 16'b0;
                             all_tile_done    <= 0;
                         end else begin
                             all_tile_done <= 1;

@@ -10,9 +10,9 @@ module TPU #
     input clk,
     input rst_n,
     input            in_valid,
-    input [7:0]      K,
-    input [7:0]      M,
-    input [7:0]      N,
+    input [15:0]     K,
+    input [15:0]     M,
+    input [15:0]     N,
     output           busy,
 
     output                  A_wr_en,

@@ -44,15 +44,14 @@ module cfu_tpu_wrapper #
         endcase
     end
 
-    // 32'hxxxx{M}{N}{K}
-    wire [7:0] K = payload_input0[7:0];
-    wire [7:0] N = payload_input0[15:8];
-    wire [7:0] M = payload_input0[23:16];
+    wire [15:0] K = payload_input1[15:0];
+    wire [15:0] N = payload_input0[15:0];
+    wire [15:0] M = payload_input0[31:16];
 
-    wire [11:0] write_A_B_index         = payload_input0[15:0];
+    wire [15:0] write_A_B_index         = payload_input0[15:0];
     wire [SIZE * 8 - 1:0] write_A_B_val = payload_input1; // Need config if size not 4
-    wire [11:0] read_A_B_index          = payload_input0[15:0];
-    wire [11:0] read_C_index            = payload_input0[15:0];
+    wire [15:0] read_A_B_index          = payload_input0[15:0];
+    wire [15:0] read_C_index            = payload_input0[15:0];
 
     TPU #
     (
@@ -101,7 +100,7 @@ module cfu_tpu_wrapper #
 
     global_buffer_bram #
     (
-        .ADDR_BITS(12),
+        .ADDR_BITS(14),
         .DATA_BITS(SIZE * 8)
     )
     gbuff_A
@@ -117,7 +116,7 @@ module cfu_tpu_wrapper #
 
     global_buffer_bram #
     (
-        .ADDR_BITS(12),
+        .ADDR_BITS(14),
         .DATA_BITS(SIZE * 8)
     )
     gbuff_B
@@ -133,7 +132,7 @@ module cfu_tpu_wrapper #
 
     global_buffer_bram #
     (
-        .ADDR_BITS(12),
+        .ADDR_BITS(14),
         .DATA_BITS(SIZE * 32)
     )
     gbuff_C
